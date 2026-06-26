@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC PUMA - Kiosko de Autoservicio</title>
+  <!-- Google Fonts: Outfit for clean, modern look; Roboto Mono for ticket text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/kiosk.css">
+</head>
+<body>
+
+  <!-- SIMULADOR DE KIOSKO (MARCO FÍSICO) -->
+  <div id="kiosk-simulator" class="kiosk-frame">
+    <!-- Barra de Estado Superior del Kiosko -->
+    <div class="kiosk-status-bar">
+      <div class="status-left">
+        <span id="kiosk-time">14:52</span>
+      </div>
+      <div class="status-center">
+        <span class="status-title">Autoservicio PC PUMA</span>
+      </div>
+      <div class="status-right">
+        <span class="status-icon wifi">📶</span>
+        <span class="status-icon battery">🔋 100%</span>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE PANTALLAS (40:60 Ratio) -->
+    <div id="kiosk-viewport" class="kiosk-viewport">
+      
+      <!-- LIENZO DE NODOS ANIMADOS (Fondo constante para login/registro/espera) -->
+      <canvas id="nodes-canvas"></canvas>
+      
+      <!-- CAPA DE CRISTAL TRASLÚCIDO (Permite ver los nodos con desenfoque Apple Liquid Glass) -->
+      <div class="canvas-glass-overlay"></div>
+
+      <!-- PANEL DE ACCESIBILIDAD PLEGABLE (Apple Style) -->
+      <div class="accessibility-panel collapsed" id="accessibility-panel">
+        <!-- Pestaña Gatillo (Sticks out) -->
+        <button id="btn-toggle-accessibility" class="acc-panel-trigger" aria-label="Abrir panel de accesibilidad" aria-expanded="false">
+          <span class="trigger-arrow">◀</span>
+          <span class="trigger-icon">♿</span>
+          <span class="trigger-text">ACCESIBILIDAD</span>
+        </button>
+        
+        <!-- Barra de Controles original -->
+        <div class="accessibility-bar" aria-label="Controles de accesibilidad">
+          <button id="btn-audio-guide" class="acc-btn" title="Activar Audio-Guía (Voz a Texto)" aria-pressed="false">
+            <span class="icon">🔊</span>
+            <span class="text">Audio Guía</span>
+          </button>
+          <button id="btn-high-contrast" class="acc-btn" title="Cambiar a Alto Contraste" aria-pressed="false">
+            <span class="icon">🌓</span>
+            <span class="text">Alto Contraste</span>
+          </button>
+          <div class="font-size-controls">
+            <button id="btn-font-dec" class="acc-btn" title="Reducir Letra">A-</button>
+            <span class="font-indicator">Letra</span>
+            <button id="btn-font-inc" class="acc-btn" title="Aumentar Letra">A+</button>
+          </div>
+          <button id="btn-colorblind" class="acc-btn" title="Modo Daltonismo" aria-pressed="false">
+            <span class="icon">👁️‍🗨️</span>
+            <span class="text">Daltonismo</span>
+          </button>
+          <button id="btn-theme-toggle" class="acc-btn" title="Cambiar Tema (Claro / Oscuro)" aria-pressed="false">
+            <span class="icon">🌙</span>
+            <span class="text">Tema</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 1: PROTECTOR DE PANTALLA (IDLE) -->
+      <!-- ============================================== -->
+      <div id="screen-idle" class="kiosk-screen active">
+        <div class="idle-content">
+          <!-- Logo de PC PUMA Principal -->
+          <div class="kiosk-logo-container">
+            <img class="pc-puma-logo" id="pc-puma-logo-img" src="img/logo/logo_white.png" alt="PC PUMA Logo">
+          </div>
+          
+          <div class="kiosk-welcome-msg">
+            <h1>PRÉSTAMO DE DISPOSITIVOS</h1>
+            <p>Servicio automático para Alumnos y Profesores</p>
+          </div>
+          
+          <!-- Botón Gigante Táctil de Inicio -->
+          <button id="btn-start-kiosk" class="pulse-button" aria-label="Tocar pantalla para comenzar">
+            <span class="pulse-ring"></span>
+            <div class="button-inner">
+              <span class="touch-icon">👆</span>
+              <span class="touch-text">TOCA PARA EMPEZAR</span>
+            </div>
+          </button>
+
+          <div class="kiosk-footer-hint">
+            <span>Dispositivos disponibles: Laptops e iPads</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 2: BIENVENIDA / SELECCIÓN DE ACCESO -->
+      <!-- ============================================== -->
+      <div id="screen-welcome" class="kiosk-screen">
+        <div class="screen-header">
+          <button class="btn-back-idle back-btn" aria-label="Volver a la pantalla de inicio">◀ Inicio</button>
+          <div class="mini-logo">
+            <span class="logo-txt">PC PUMA</span>
+          </div>
+        </div>
+
+        <div class="screen-body center-content">
+          <h2 class="prompt-title">Solicitar Préstamo de Equipos</h2>
+          
+          <!-- Vitrina de Dispositivos (Interactive Showcase Carousel - Solo Automático) -->
+          <div class="device-showcase-container">
+            <div class="device-showcase-track">
+              <!-- Card 1: Laptop -->
+              <div class="showcase-card active" data-index="0">
+                <div class="showcase-icon">💻</div>
+                <h4 class="showcase-name">Laptop UNAM</h4>
+              </div>
+              
+              <!-- Card 2: iPad -->
+              <div class="showcase-card" data-index="1">
+                <div class="showcase-icon">📱</div>
+                <h4 class="showcase-name">iPad Air UNAM</h4>
+              </div>
+
+              <!-- Card 3: Conectores -->
+              <div class="showcase-card" data-index="2">
+                <div class="showcase-icon">🔌</div>
+                <h4 class="showcase-name">Kit de Conexión</h4>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones de Acceso Debajo -->
+          <div class="welcome-actions-row">
+            <button id="btn-goto-login" class="btn-submit btn-action-success" aria-label="Iniciar Sesión para solicitar préstamo">
+              🔑 Iniciar Sesión
+            </button>
+            <button id="btn-goto-register" class="btn-submit" aria-label="Registrarse si eres un usuario nuevo">
+              📝 Registrarse
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 3: INICIAR SESIÓN -->
+      <!-- ============================================== -->
+      <div id="screen-login" class="kiosk-screen">
+        <div class="screen-header">
+          <button class="btn-back-welcome back-btn" aria-label="Volver al menú anterior">◀ Atrás</button>
+          <div class="mini-logo"><span class="logo-txt">PC PUMA</span></div>
+        </div>
+
+        <div class="screen-body">
+          <h2 class="form-title">Iniciar Sesión</h2>
+          <p class="form-subtitle">Ingresa tus datos con el teclado en pantalla</p>
+
+          <form id="form-login" class="kiosk-form" onsubmit="event.preventDefault();">
+            <div class="input-group">
+              <label for="login-user">Número de Cuenta / Trabajador</label>
+              <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input type="text" id="login-user" class="kiosk-input virtual-kb-input" placeholder="Ej. 316045612" readonly>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="login-pass">Contraseña</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="login-pass" class="kiosk-input virtual-kb-input" placeholder="••••••••" readonly>
+                <button type="button" class="btn-toggle-password" tabindex="-1">👁️</button>
+              </div>
+            </div>
+
+            <!-- hCaptcha Mock Táctil -->
+            <div class="captcha-container">
+              <div class="captcha-box" id="captcha-checkbox-wrapper">
+                <div class="captcha-checkbox" id="login-captcha" role="checkbox" aria-checked="false" tabindex="0" aria-label="Verificación de seguridad: Soy humano">
+                  <div class="captcha-check-mark">✓</div>
+                </div>
+                <label for="login-captcha" class="captcha-label">Soy humano</label>
+              </div>
+              <div class="captcha-logo">
+                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b894'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/></svg>" alt="Seguridad" width="24" height="24">
+                <span>hCaptcha</span>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit-login" class="btn-submit" disabled aria-label="Iniciar Sesión y continuar">Iniciar Sesión</button>
+          </form>
+
+          <div class="form-footer">
+            <span>¿No tienes cuenta? <button class="link-btn btn-goto-register-link">Regístrate aquí</button></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 4: REGISTRO (CON PESTAÑAS) -->
+      <!-- ============================================== -->
+      <div id="screen-register" class="kiosk-screen">
+        <div class="screen-header">
+          <button class="btn-back-welcome back-btn" aria-label="Volver al menú anterior">◀ Atrás</button>
+          <div class="mini-logo"><span class="logo-txt">PC PUMA</span></div>
+        </div>
+
+        <div class="screen-body">
+          <h2 class="form-title">Crear Cuenta</h2>
+
+          <!-- Pestañas Alumno / Trabajador -->
+          <div class="tabs-header" role="tablist">
+            <button id="tab-alumno" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-alumno">🎓 Alumno</button>
+            <button id="tab-trabajador" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-trabajador">💼 Trabajador</button>
+          </div>
+
+          <!-- PANEL ALUMNO -->
+          <div id="panel-alumno" class="tab-panel active" role="tabpanel" aria-labelledby="tab-alumno">
+            <form id="form-register-alumno" class="kiosk-form" onsubmit="event.preventDefault();">
+              <div class="input-group">
+                <label for="reg-al-cuenta">Número de cuenta</label>
+                <input type="text" id="reg-al-cuenta" class="kiosk-input virtual-kb-input" placeholder="Ej. 316024985" readonly>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-al-inst">Institución</label>
+                <div class="select-touch-trigger" id="reg-al-inst-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                  <span class="select-val">Selecciona una opción</span>
+                  <span class="select-arrow">▼</span>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-al-carr">Carrera</label>
+                <div class="select-touch-trigger" id="reg-al-carr-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                  <span class="select-val">Selecciona una opción</span>
+                  <span class="select-arrow">▼</span>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-al-tel">Teléfono celular</label>
+                <input type="text" id="reg-al-tel" class="kiosk-input virtual-kb-input" placeholder="Ej. 5512345678" readonly>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-al-pass">Crear Contraseña</label>
+                <input type="password" id="reg-al-pass" class="kiosk-input virtual-kb-input" placeholder="Mínimo 6 caracteres" readonly>
+              </div>
+
+              <p class="privacy-notice">
+                Toda la información y datos personales o institucionales contenidos en este registro son considerados como confidenciales y están legalmente protegidos por la normatividad de la Universidad Nacional Autónoma de México en la materia.
+              </p>
+
+              <button type="submit" id="btn-submit-reg-alumno" class="btn-submit" disabled>Registrar Alumno</button>
+            </form>
+          </div>
+
+          <!-- PANEL TRABAJADOR -->
+          <div id="panel-trabajador" class="tab-panel" role="tabpanel" aria-labelledby="tab-trabajador">
+            <form id="form-register-trabajador" class="kiosk-form" onsubmit="event.preventDefault();">
+              <div class="input-group">
+                <label for="reg-tr-num">Número de trabajador</label>
+                <input type="text" id="reg-tr-num" class="kiosk-input virtual-kb-input" placeholder="Ej. 448572" readonly>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-tr-rfc">RFC (sin homoclave)</label>
+                <input type="text" id="reg-tr-rfc" class="kiosk-input virtual-kb-input" placeholder="Ej. CAGA800101" readonly>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-tr-inst">Institución</label>
+                <div class="select-touch-trigger" id="reg-tr-inst-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                  <span class="select-val">Selecciona una opción</span>
+                  <span class="select-arrow">▼</span>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-tr-tel">Teléfono celular</label>
+                <input type="text" id="reg-tr-tel" class="kiosk-input virtual-kb-input" placeholder="Ej. 5598765432" readonly>
+              </div>
+
+              <div class="input-group">
+                <label for="reg-tr-pass">Crear Contraseña</label>
+                <input type="password" id="reg-tr-pass" class="kiosk-input virtual-kb-input" placeholder="Mínimo 6 caracteres" readonly>
+              </div>
+
+              <p class="privacy-notice">
+                Toda la información y datos personales o institucionales contenidos en este registro son considerados como confidenciales y están legalmente protegidos por la normatividad de la Universidad Nacional Autónoma de México en la materia.
+              </p>
+
+              <button type="submit" id="btn-submit-reg-trabajador" class="btn-submit" disabled>Registrar Trabajador</button>
+            </form>
+          </div>
+
+          <div class="form-footer">
+            <span>¿Ya tienes cuenta? <button class="link-btn btn-goto-login-link">Inicia Sesión</button></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 5: SELECCIÓN DE EQUIPOS (PRÉSTAMO) -->
+      <!-- ============================================== -->
+      <div id="screen-device-select" class="kiosk-screen">
+        <div class="screen-header">
+          <button id="btn-logout" class="back-btn" aria-label="Cerrar sesión e ir al inicio">🚪 Salir</button>
+          <div class="user-greeting">
+            <span class="user-avatar">👤</span>
+            <span id="user-display-name" class="user-name">Carreño Garavito Victor</span>
+          </div>
+        </div>
+
+        <div class="screen-body">
+          <h2 class="form-title">Detalles del Préstamo</h2>
+          <p class="form-subtitle">Selecciona las opciones deseadas tocando cada una</p>
+
+          <form id="form-loan" class="kiosk-form" onsubmit="event.preventDefault();">
+            
+            <div class="input-group">
+              <label for="loan-inst">Institución</label>
+              <div class="select-touch-trigger" id="loan-inst-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <span class="select-val">Selecciona tu Institución</span>
+                <span class="select-arrow">▼</span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="loan-module">Módulo de Atención</label>
+              <div class="select-touch-trigger" id="loan-module-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <span class="select-val">Selecciona un Módulo</span>
+                <span class="select-arrow">▼</span>
+              </div>
+            </div>
+
+            <!-- Selección Visual: Tipo de Carrito (Dispositivo) -->
+            <div class="input-group">
+              <label>Tipo de Dispositivo</label>
+              <div class="visual-selector-grid" role="radiogroup" aria-label="Tipo de Dispositivo">
+                <button type="button" class="visual-card" data-value="iPad" role="radio" aria-checked="false" aria-label="Seleccionar iPad">
+                  <div class="card-large-icon">📱</div>
+                  <span class="card-title">iPad</span>
+                  <span class="card-desc">Ideal para lectura y diseño</span>
+                </button>
+                <button type="button" class="visual-card" data-value="Laptop" role="radio" aria-checked="false" aria-label="Seleccionar Laptop">
+                  <div class="card-large-icon">💻</div>
+                  <span class="card-title">Laptop</span>
+                  <span class="card-desc">Ideal para programar e investigar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Selección Visual: Tipo de Conector -->
+            <div class="input-group">
+              <label>Tipo de Conector</label>
+              <div class="visual-selector-grid" role="radiogroup" aria-label="Tipo de Conector">
+                <button type="button" class="visual-card" data-value="HDMI" role="radio" aria-checked="false" aria-label="Seleccionar Conector HDMI">
+                  <div class="card-large-icon">🔌</div>
+                  <span class="card-title">HDMI</span>
+                  <span class="card-desc">Conector estándar digital</span>
+                </button>
+                <button type="button" class="visual-card" data-value="VGA" role="radio" aria-checked="false" aria-label="Seleccionar Conector VGA">
+                  <div class="card-large-icon">🎛️</div>
+                  <span class="card-title">VGA</span>
+                  <span class="card-desc">Para proyectores antiguos</span>
+                </button>
+                <button type="button" class="visual-card" data-value="Tipo C" role="radio" aria-checked="false" aria-label="Seleccionar Conector Tipo C">
+                  <div class="card-large-icon">⚡</div>
+                  <span class="card-title">Tipo C</span>
+                  <span class="card-desc">Conexión de alta velocidad</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions-row">
+              <button type="button" id="btn-cancel-loan-form" class="btn-cancel">Cerrar</button>
+              <button type="submit" id="btn-submit-loan" class="btn-submit btn-action-success" disabled>Pedir Equipo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 6: CUENTA REGRESIVA (PRÉSTAMO ACTIVO) -->
+      <!-- ============================================== -->
+      <div id="screen-loan-active" class="kiosk-screen">
+        <div class="screen-header">
+          <div class="user-greeting">
+            <span class="user-avatar">👤</span>
+            <span id="user-display-name-active" class="user-name">Carreño Garavito Victor</span>
+          </div>
+        </div>
+
+        <div class="screen-body center-content">
+          <div class="loan-summary-card">
+            <h3>Dispositivo Pre-Asignado</h3>
+            
+            <div class="summary-details">
+              <div class="detail-row">
+                <span class="detail-label">Módulo:</span>
+                <span id="active-loan-module" class="detail-value">CD</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Carrito:</span>
+                <span id="active-loan-cart" class="detail-value">C06</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Equipo:</span>
+                <span id="active-loan-device" class="detail-value">L43</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Tipo:</span>
+                <span id="active-loan-type" class="detail-value">Laptop</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Número de inventario:</span>
+                <span id="active-loan-inv" class="detail-value">2620015</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Temporizador Gigante -->
+          <div class="timer-container" aria-live="polite" aria-label="Tiempo restante para recoger el equipo">
+            <span class="timer-hint">Tiempo disponible para recoger</span>
+            <div id="countdown-timer" class="countdown-display">09:59</div>
+          </div>
+
+          <div class="action-buttons-stack">
+            <!-- Botón para ver y disparar la entrega -->
+            <button id="btn-trigger-ticket" class="btn-action-primary" aria-label="Confirmar y Generar Código QR del préstamo">
+              <span class="icon">🎟️</span> Confirmar y Generar QR
+            </button>
+            <button id="btn-cancel-active-loan" class="btn-action-danger" aria-label="Cancelar esta solicitud de préstamo">
+              Cancelar Préstamo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PANTALLA 7: EXITO FINAL (VE AL MODULO) -->
+      <!-- ============================================== -->
+      <div id="screen-success-final" class="kiosk-screen">
+        <div class="screen-body center-content">
+          <div class="success-icon-wrapper">
+            <div class="success-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="success-message">
+            <h1 class="success-title">¡SOLICITUD PROCESADA!</h1>
+            <p class="success-subtitle">El ticket se ha impreso y se envió a tu WhatsApp registrado</p>
+            
+            <div class="instruction-box">
+              <span class="step-badge">Paso Siguiente</span>
+              <p id="instruction-text-main" class="instruction-main">Ve al módulo a solicitar tu equipo</p>
+              <p class="instruction-sub">Presenta el ticket impreso o el código QR desde tu celular al operador.</p>
+            </div>
+          </div>
+
+          <!-- Info del préstamo rápido -->
+          <div class="compact-loan-info">
+            <div><strong>Préstamo ID:</strong> <span id="success-loan-id">447540</span></div>
+            <div><strong>Módulo:</strong> <span id="success-loan-module">CD</span></div>
+          </div>
+
+          <button id="btn-finish-flow" class="btn-submit" aria-label="Finalizar y cerrar sesión, volver al inicio">Finalizar</button>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TECLADO VIRTUAL EN PANTALLA (Para Kiosko Touch) -->
+      <!-- ============================================== -->
+      <div id="virtual-keyboard" class="virtual-keyboard-container">
+        <!-- Barra de Control del Teclado -->
+        <div class="kb-header">
+          <span class="kb-title">Teclado del Kiosko</span>
+          <button id="btn-close-kb" class="kb-close-btn" aria-label="Cerrar teclado">Aceptar ✓</button>
+        </div>
+        <!-- Filas de teclas (Cambiables dinámicamente) -->
+        <div class="kb-keys-grid" id="kb-keys-container"></div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- MENÚ DETECTABLE / SELECTORES TÁCTILES GRANDES -->
+      <!-- ============================================== -->
+      <div id="touch-dropdown-modal" class="touch-modal-overlay">
+        <div class="touch-modal-content">
+          <div class="touch-modal-header">
+            <h3 id="dropdown-modal-title">Selecciona una opción</h3>
+            <button id="btn-close-dropdown-modal" class="btn-close-modal">×</button>
+          </div>
+          <div class="touch-modal-body" id="dropdown-options-list" role="listbox">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- MODAL DE GENERACIÓN DE QR Y DETALLE DE TICKET -->
+      <!-- ============================================== -->
+      <div id="ticket-qr-modal" class="touch-modal-overlay">
+        <!-- Animación de Ranura de Ticket Física -->
+        <div class="printer-slot-simulation">
+          <div class="printer-slot"></div>
+          <!-- Ticket de papel físico simulado saliendo de la ranura -->
+          <div class="printed-ticket-paper" id="printed-ticket">
+            <div class="ticket-header">
+              <h3>PC PUMA UNAM</h3>
+              <p>Programa de Conectividad Móvil</p>
+              <p class="ticket-date" id="ticket-time-stamp">25/06/2026 14:52</p>
+            </div>
+            
+            <div class="ticket-divider">-----------------------------</div>
+            
+            <div class="ticket-info-block">
+              <div><strong>USUARIO:</strong> <span id="ticket-username">Victor Carreño G.</span></div>
+              <div><strong>ID PRÉSTAMO:</strong> <span id="ticket-loan-id" class="large-text">447540</span></div>
+              <div><strong>EQUIPO:</strong> <span id="ticket-device-inv">L43 (Laptop)</span></div>
+              <div><strong>MÓDULO:</strong> <span id="ticket-module-name">Docencia</span></div>
+            </div>
+
+            <div class="ticket-divider">-----------------------------</div>
+
+            <!-- Canvas donde se dibuja el Código QR -->
+            <div class="ticket-qr-container">
+              <canvas id="qr-code-canvas" width="160" height="160" aria-label="Código QR del Préstamo"></canvas>
+            </div>
+
+            <div class="ticket-footer">
+              <p class="barcode-text">||| | ||| |||| | || |||</p>
+              <p>Presenta este ticket al operador</p>
+              <p>¡Gracias por usar PC PUMA!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ticket-modal-buttons">
+          <div class="whatsapp-status-alert">
+            <span class="wa-icon">💬</span>
+            <div class="wa-text">
+              <p class="wa-title">Enviando a tu WhatsApp...</p>
+              <p class="wa-desc" id="wa-phone-feedback">Se envió el ID 447540 al 55****1234</p>
+            </div>
+          </div>
+          <button id="btn-collect-ticket" class="btn-action-success animate-pulse-border" aria-label="Recoger ticket impreso y continuar al paso final">
+            🎟️ Tomar Ticket e Ir al Módulo
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Script Principal -->
+  <script src="js/kiosk.js"></script>
+</body>
+</html>

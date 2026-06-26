@@ -882,19 +882,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const inst = regAlInstTrigger.querySelector('.select-val').classList.contains('has-val');
         const carr = regAlCarrTrigger.querySelector('.select-val').classList.contains('has-val');
         const tel = document.getElementById('reg-al-tel').value.trim();
-        const pass = document.getElementById('reg-al-pass').value.trim();
         const submitBtn = document.getElementById('btn-submit-reg-alumno');
         
-        submitBtn.disabled = !(cuenta.length >= 8 && inst && carr && tel.length === 10 && pass.length >= 6);
+        submitBtn.disabled = !(cuenta.length >= 8 && inst && carr && tel.length === 10);
       } else {
         const num = document.getElementById('reg-tr-num').value.trim();
         const rfc = document.getElementById('reg-tr-rfc').value.trim();
         const inst = regTrInstTrigger.querySelector('.select-val').classList.contains('has-val');
         const tel = document.getElementById('reg-tr-tel').value.trim();
-        const pass = document.getElementById('reg-tr-pass').value.trim();
         const submitBtn = document.getElementById('btn-submit-reg-trabajador');
         
-        submitBtn.disabled = !(num.length >= 4 && rfc.length >= 10 && inst && tel.length === 10 && pass.length >= 6);
+        submitBtn.disabled = !(num.length >= 4 && rfc.length >= 10 && inst && tel.length === 10);
       }
     }
     else if (state.currentScreen === 'screen-device-select') {
